@@ -36,7 +36,7 @@ docker build -t ml-model .
 ```bash
 docker run -p 9000:9000 ml-model
 ```
-![Docker Terminal](img\docker.png)
+![Docker Terminal](img/docker.png)
 
 The Flask app will now be running at: [http://localhost:9000](http://localhost:9000)
 
@@ -46,7 +46,7 @@ The Flask app will now be running at: [http://localhost:9000](http://localhost:9
 
 ### Sample Prediction Result
 
-![Test Result](img\test_result.png)
+![Test Result](img/test_result.png)
 
 ### ✅ 1. Health Check
 
