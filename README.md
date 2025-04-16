@@ -63,7 +63,7 @@ curl http://localhost:9000/health
 ---
 
 ### 🌸 2. Predict Iris Flower Species
-
+#### 2.1 
 ```bash
 curl -X POST http://localhost:9000/predict/iris ^
 -H "Content-Type: application/json" ^
@@ -81,7 +81,18 @@ curl -X POST http://localhost:9000/predict/iris ^
   "prediction": [0, 0]
 }
 ```
+#### 2.2 Input error
+```bash
+curl -X POST http://localhost:9000/predict/iris ^
+-H "Content-Type: application/json" ^
+-d "{\"features\": [[5.1, 3.5, 1.4, 0.2], [6.5, 3.5, 1.8]]}"
+```
 
+**Expected Output:**
+
+```json
+{"error":"Each feature set must contain exactly 4 values. Error at index 1."}
+```
 ---
 
 ### 🏠 3. Predict House Price
