@@ -4,3 +4,4 @@ scikit-learn==1.6.1
 keras==3.9.2
 fastapi==0.115.12
 tensorflow==2.19.0
+uvicorn
