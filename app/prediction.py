@@ -4,6 +4,9 @@ import pandas as pd
 from keras.models import load_model
 
 
+modelsrc = 'app/lstm_model_3.h5'
+datasrc = 'app/data.csv'
+
 def pm25_to_aqi_tier(pm25):
     if pm25 <= 12.0:
         return 0  # Good
@@ -144,18 +147,22 @@ def rolling_forecast(model, data, target_col, sequence_length, forecast_horizon)
         input_sequence = create_sequences(rolling_data.tail(sequence_length), target_col, sequence_length)
         predicted_value = predict(model, input_sequence)
 
+        # Create new timestamp
         new_row = rolling_data.tail(1)
         new_timestamp = pd.to_datetime(new_row.index[0]) + pd.Timedelta(hours=1)
         new_row.index = pd.DatetimeIndex([new_timestamp])
 
-        rolling_data = pd.concat([rolling_data, new_row], ignore_index=True)
+        # Append new row to rolling data
+        rolling_data = pd.concat([rolling_data, new_row])
 
+        # Extract datetime directly (not as a DatetimeIndex)
         rolling_forecast_df = pd.concat(
-            [rolling_forecast_df, pd.DataFrame([[pd.to_datetime(rolling_data.tail(1).index), predicted_value]], columns=['time', 'predicted_value'])],
+            [rolling_forecast_df, pd.DataFrame([[new_timestamp, predicted_value]], columns=['time', 'predicted_value'])],
             ignore_index=True
         )
 
     return rolling_forecast_df
+
 
 
 if __name__ == "__main__":
@@ -172,7 +179,9 @@ if __name__ == "__main__":
 
 
     # Uncomment the following lines to run rolling forecast
-    df = pd.read_csv('data.csv')
-    lstm_model = load_model('app\lstm_model_3.h5', compile=False)
-    print(rolling_forecast(lstm_model, df, target_col='pm2_5_(μg/m³)', sequence_length=24, forecast_horizon=48))
+    df = pd.read_csv(datasrc)
+    lstm_model = load_model(modelsrc, compile=False)
+    df = rolling_forecast(lstm_model, df, target_col='pm2_5_(μg/m³)', sequence_length=24, forecast_horizon=48)
+    print(df)
+    print(f"Type of prediction: {type(df)}")
 

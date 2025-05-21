@@ -1,3 +1,4 @@
+import re
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import numpy as np
@@ -6,6 +7,10 @@ import pandas as pd
 import joblib
 import os
 
+app = FastAPI()
+
+modelsrc = 'app/lstm_model_3.h5'
+datasrc = 'app/data.csv'
 
 def create_sequences(data, target_column, sequence_length):
     X = []
@@ -42,10 +47,7 @@ def rolling_forecast(model, data, target_col, sequence_length, forecast_horizon)
 
     return rolling_forecast_df
 
-app = FastAPI()
 
-modelsrc = 'app/lstm_model_3.h5'
-datasrc = 'app/data.csv'
 
 @app.get("/")
 def read_root():
@@ -81,15 +83,18 @@ async def predict_rolling():
         raise HTTPException(status_code=500, detail=f"Error loading or preprocessing data: {e}")
     
     prediction = rolling_forecast(lstm_model, data, target_col='pm2_5_(μg/m³)', sequence_length=24, forecast_horizon=48)
+    # Flatten nested predicted_value
+    prediction["predicted_value"] = prediction["predicted_value"].apply(
+        lambda x: float(x[0]) if isinstance(x, (list, np.ndarray)) else float(x)
+    )
 
-    if hasattr(prediction, 'numpy'):
-        prediction = prediction.numpy()
-    prediction = np.array(prediction)
-        
+    # # Convert datetime to string
+    prediction["time"] = prediction["time"].apply(
+        lambda x: x.isoformat() if hasattr(x, "isoformat") else str(x)
+    )
     if isinstance(prediction, pd.DataFrame):
-        return {"predictions": prediction.values.flatten().tolist()}
-    elif isinstance(prediction, np.ndarray):
-        return {"predictions": prediction.flatten().tolist()}
+        records = prediction.to_dict(orient="records")
+        return {"predictions": records}
     else:
         raise HTTPException(status_code=500, detail="Unsupported prediction output format.")
 
